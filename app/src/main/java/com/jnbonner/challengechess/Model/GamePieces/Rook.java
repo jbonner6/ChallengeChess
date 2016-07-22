@@ -12,7 +12,6 @@ import java.util.ArrayList;
  */
 public class Rook extends GamePiece {
 
-    double value = 5.0d;
 
     boolean canCastle;
 
@@ -20,6 +19,7 @@ public class Rook extends GamePiece {
         super(location, color);
         image = color.getRook();
         canCastle = true;
+        pointValue = 5.0d;
     }
 
     @Override

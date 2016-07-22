@@ -12,11 +12,11 @@ import java.util.ArrayList;
  */
 public class Knight extends GamePiece {
 
-    double value = 3.0d;
 
     public Knight(PieceLocation location, Color color) {
         super(location, color);
         image = color.getKnight();
+        pointValue = 3.0d;
     }
 
     @Override

@@ -40,7 +40,7 @@ public class AIPlayer extends Player {
         centerTiles.add(new PieceLocation(3,3));
         centerTiles.add(new PieceLocation(3,4));
         centerTiles.add(new PieceLocation(4,3));
-        centerTiles.add(new PieceLocation(4,4));
+        centerTiles.add(new PieceLocation(4, 4));
     }
 
     /**
@@ -48,20 +48,23 @@ public class AIPlayer extends Player {
      * Ends whenever it moves a piece
      */
     public void startMove(){
-        BoardTile[][] newBoard = GameBoard.getInstance().getGameBoard();
-        HashMap<GamePiece, ArrayList<PieceLocation>> moveMap =
-                getAllMovesForCurrentModel(newBoard, getColor());
+//        BoardTile[][] newBoard = GameBoard.getInstance().getGameBoard();
+//        HashMap<GamePiece, ArrayList<PieceLocation>> moveMap =
+//                getAllMovesForCurrentModel(newBoard, getColor());
+//
+//
+//
+//        if (moveMap.size() > 0) {
+//            Random rand = new Random();
+//            GamePiece toMove = (new ArrayList<>(moveMap.keySet()))
+//                    .get(rand.nextInt(moveMap.keySet().size()));
+//            PieceLocation locToMove = moveMap.get(toMove)
+//                    .get((new Random()).nextInt(moveMap.get(toMove).size()));
+//            toMove.movePiece(locToMove);
+//        }
 
-
-
-        if (moveMap.size() > 0) {
-            Random rand = new Random();
-            GamePiece toMove = (new ArrayList<>(moveMap.keySet()))
-                    .get(rand.nextInt(moveMap.keySet().size()));
-            PieceLocation locToMove = moveMap.get(toMove)
-                    .get((new Random()).nextInt(moveMap.get(toMove).size()));
-            toMove.movePiece(locToMove);
-        }
+        MoveHolder toMake = makeBestMove();
+        toMake.toMove.movePiece(toMake.newLoc);
     }
 
 
@@ -87,18 +90,38 @@ public class AIPlayer extends Player {
         return moveMap;
     }
 
+    private class MoveHolder{
+        double value;
+        GamePiece toMove;
+        PieceLocation newLoc;
+        public MoveHolder(double value, GamePiece toMove, PieceLocation newLoc){
+            this.value = value;
+            this.toMove = toMove;
+            this.newLoc = newLoc;
+        }
+    }
 
-    private void makeBestMove(){
+    private MoveHolder makeBestMove(){
         BoardTile[][] newBoard = GameBoard.getInstance().getGameBoard();
         HashMap<GamePiece, ArrayList<PieceLocation>> moveMap =
                 getAllMovesForCurrentModel(newBoard, getColor());
+        MoveHolder bestMove = new MoveHolder(0, null, null);
 
         if (moveMap.size() > 0) {
             ArrayList<GamePiece> allPieces = new ArrayList<>(moveMap.keySet());
             for (GamePiece curPiece : allPieces) {
-
+                for (PieceLocation pLoc : moveMap.get(curPiece)){
+                    //curPiece.movePieceNoRefresh(pLoc);
+                    //double retValue = evaluateGameBoard(newBoard);
+                    double retValue = 0;
+                    if (retValue > bestMove.value){
+                        bestMove = new MoveHolder(retValue, curPiece, pLoc);
+                    }
+                    GameBoard.getInstance().undoSingleMove();
+                }
             }
         }
+        return bestMove;
     }
 
     private class EvalHolder{
@@ -112,40 +135,70 @@ public class AIPlayer extends Player {
         }
     }
 
-    private void evaluateGameBoard(BoardTile[][] toEval){
+    private double evaluateGameBoard(BoardTile[][] toEval){
         double blackTotal = 0;
         double whiteTotal = 0;
-        EvalHolder bestMove = new EvalHolder(0,0,0);
+       // EvalHolder bestMove = new EvalHolder(0,0,0);
         for (int i = 0; i <= 7; i++){
             for(int j = 0; j <= 7; j++){
+                double value = 0;
                 if (toEval[i][j].getGamePiece() != null){
                     if (toEval[i][j].getGamePiece() instanceof Pawn){
-                        evalPawn((Pawn)toEval[i][j].getGamePiece());
+                        value = evalPawn((Pawn)toEval[i][j].getGamePiece());
                     }
                     if (toEval[i][j].getGamePiece() instanceof Knight){
-                        evalKnight((Knight)toEval[i][j].getGamePiece());
+                        value = evalKnight((Knight)toEval[i][j].getGamePiece());
                     }
                     if (toEval[i][j].getGamePiece() instanceof Bishop){
-                        evalBishop((Bishop)toEval[i][j].getGamePiece());
+                        value = evalBishop((Bishop)toEval[i][j].getGamePiece());
                     }
                     if (toEval[i][j].getGamePiece() instanceof Rook){
-                        evalRook((Rook)toEval[i][j].getGamePiece());
+                        value = evalRook((Rook)toEval[i][j].getGamePiece());
                     }
                     if (toEval[i][j].getGamePiece() instanceof Queen){
-                        evalQueen((Queen)toEval[i][j].getGamePiece());
+                        value = evalQueen((Queen)toEval[i][j].getGamePiece());
                     }
                     if (toEval[i][j].getGamePiece() instanceof King){
-                        evalKing((King)toEval[i][j].getGamePiece());
+                        value = evalKing((King)toEval[i][j].getGamePiece());
+                    }
+                    switch(toEval[i][j].getGamePiece().getColor()){
+                        case White: whiteTotal += value;
+                            break;
+                        case Black: blackTotal += value;
+                            break;
                     }
                 }
             }
         }
+        if (whiteTotal == 0){
+            whiteTotal = .00000000000001;
+        }
+        double totValue = blackTotal / whiteTotal;
+        System.out.println("Turn Value: " + String.valueOf(totValue));
+        return totValue;
     }
 
     private double evalPawn(Pawn pawn){
+        pawn.setForAI(true);
         ArrayList<PieceLocation> possibleMoves = pawn.calculatePossibleMoves();
-
-        return 0;
+        double total = 1;
+        double forwardBonus = 1 + (pawn.getColor().getBaseValue() - pawn.getLocation().getX())
+                * pawn.getColor().getDirScale() * .1;
+        int centerCounter = 0;
+        double takeBonus = 0;
+        for (PieceLocation pieceLoc : possibleMoves){
+            if (centerTiles.contains(pieceLoc)){
+                centerCounter++;
+            }
+            GamePiece pieceAtLoc = GameBoard.getInstance()
+                    .getGameBoard()[pieceLoc.getX()][pieceLoc.getY()].getGamePiece();
+            if (pieceAtLoc != null){
+                takeBonus = pieceAtLoc.getPointValue();
+            }
+        }
+        pawn.setForAI(false);
+        double value = (total + centerCounter + takeBonus) * forwardBonus;
+        return value;
     }
 
     private double evalKnight(Knight knight){

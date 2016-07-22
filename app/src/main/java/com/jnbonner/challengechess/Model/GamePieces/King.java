@@ -16,8 +16,6 @@ import java.util.Set;
  */
 public class King extends GamePiece{
 
-    double value = 10000.0d;
-
     HashSet<PieceLocation> allEnemyMoves;
     boolean canCastle;
     boolean isInCheck;
@@ -29,6 +27,7 @@ public class King extends GamePiece{
         canCastle = true;
         isInCheck = false;
         gameBoard = GameBoard.getInstance();
+        pointValue = 10000.0d;
     }
 
     @Override

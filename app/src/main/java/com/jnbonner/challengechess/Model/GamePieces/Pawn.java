@@ -12,14 +12,15 @@ import java.util.ArrayList;
  */
 public class Pawn extends GamePiece {
 
-    double value = 1.0d;
-
     boolean firstMove;
+    boolean forAI;
 
     public Pawn(PieceLocation location, Color color) {
         super(location, color);
         image = color.getPawn();
         firstMove = true;
+        forAI = false;
+        pointValue = 1.0d;
     }
 
     @Override
@@ -34,6 +35,9 @@ public class Pawn extends GamePiece {
         int y = location.getY();
 
         boolean forCheck = GameBoard.getInstance().getTurnManager().isCalculatingCheck();
+        if (forAI){
+            forCheck = forAI;
+        }
 
         if (color == Color.Black) {
             if (x <= 6) {
@@ -123,5 +127,13 @@ public class Pawn extends GamePiece {
 
     public void setFirstMove(boolean firstMove) {
         this.firstMove = firstMove;
+    }
+
+    public boolean isForAI() {
+        return forAI;
+    }
+
+    public void setForAI(boolean forAI) {
+        this.forAI = forAI;
     }
 }

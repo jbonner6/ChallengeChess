@@ -22,7 +22,7 @@ public class GamePiece {
     int image;
     Color color;
     ArrayList<PieceLocation> possibleMoves;
-    Integer pointValue;
+    double pointValue;
 
     public GamePiece(PieceLocation location, Color color){
         this.location = location;
@@ -129,11 +129,11 @@ public class GamePiece {
         this.possibleMoves = possibleMoves;
     }
 
-    public Integer getPointValue() {
+    public double getPointValue() {
         return pointValue;
     }
 
-    public void setPointValue(Integer pointValue) {
+    public void setPointValue(double pointValue) {
         this.pointValue = pointValue;
     }
 

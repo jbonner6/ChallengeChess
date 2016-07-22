@@ -12,11 +12,10 @@ import java.util.ArrayList;
  */
 public class Bishop extends GamePiece {
 
-    double value = 3.0d;
-
     public Bishop(PieceLocation location, Color color) {
         super(location, color);
         image = color.getBishop();
+        pointValue = 3.0d;
     }
 
     @Override
